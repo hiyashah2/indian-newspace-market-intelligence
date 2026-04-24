@@ -35,6 +35,7 @@ THEMES = {
 
 # --- 3. INITIALIZE APP ---
 app = dash.Dash(__name__)
+server = app.server  # <--- THIS IS THE LINE RENDER IS LOOKING FOR 
 
 # --- 4. LAYOUT ---
 app.layout = html.Div(id='main-container', children=[
