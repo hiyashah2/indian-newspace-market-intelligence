@@ -1,4 +1,6 @@
-# Indian NewSpace Market Intelligence Dashboard (2020-2026)
+# Indian NewSpace Market Intelligence (2026)
+
+> **[📊 View the Live Interactive Dashboard Here](https://indian-newspace-market-intelligence-1.onrender.com/)**
 
 ## Project Overview
 This project is a data-driven intelligence tool designed to map the rapidly evolving private space ecosystem in India. Following the 2020 reforms and the 2023 Space Policy, the sector has grown from 50 to over 300 active startups. This dashboard analyzes funding distribution, segment maturity, and identifies "white spaces" in the market.
