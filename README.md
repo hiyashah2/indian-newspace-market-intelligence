@@ -18,7 +18,7 @@ This project is a data-driven intelligence tool designed to map the rapidly evol
 - **Version Control:** GitHub
 
 ## Dataset Summary
-The project utilizes a custom-curated dataset of 15+ leading Indian space startups, tracking:
+The project utilizes a custom-curated dataset of 30+ leading Indian space startups, tracking:
 - **Company Name & Headquarters**
 - **Core Market Segment**
 - **Estimated Total Funding (USD)**
