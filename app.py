@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 # ─────────────────────────────────────────────
 # 1. DATA PREP
 # ─────────────────────────────────────────────
-df = pd.read_csv('indian_space_startups.csv')
+df = pd.read_csv('data/indian_space_startups.csv')
 
 def clean_currency(value):
     if isinstance(value, str):
@@ -21,12 +21,11 @@ def clean_currency(value):
 df['Funding_Cleaned'] = df['Total_Funding_USD_Est'].apply(clean_currency)
 
 # ─────────────────────────────────────────────
-# 2. ECOSYSTEM ANALYTICS (Pre-computed for insight cards)
+# 2. PRE-COMPUTED ANALYTICS (for insight cards)
 # ─────────────────────────────────────────────
 total_funding   = df['Funding_Cleaned'].sum()
 total_companies = len(df)
 
-# Segment names match exactly what is in the CSV
 lv_mask        = df['Segment'] == 'Launch Vehicles'
 lv_funding_pct = round(df.loc[lv_mask, 'Funding_Cleaned'].sum() / total_funding * 100, 1)
 lv_count_pct   = round(df[lv_mask].shape[0] / total_companies * 100, 1)
@@ -35,14 +34,11 @@ ssa_mask        = df['Segment'] == 'SSA'
 ssa_funding_pct = round(df.loc[ssa_mask, 'Funding_Cleaned'].sum() / total_funding * 100, 1)
 GLOBAL_SSA_PCT  = 9.0
 
-post2020_count = df[df['Year_Founded'] >= 2020].shape[0]
-post2020_pct   = round(post2020_count / total_companies * 100, 1)
+post2020_pct = round(df[df['Year_Founded'] >= 2020].shape[0] / total_companies * 100, 1)
 
 # ─────────────────────────────────────────────
-# 3. GLOBAL BENCHMARK & STRATEGIC PROFILES
+# 3. BENCHMARK DATA & PROFILES
 # ─────────────────────────────────────────────
-
-# Global investment mix — BryceTech Start-Up Space 2024
 GLOBAL_BENCHMARK = {
     'Launch Vehicles':   34.0,
     'Earth Observation': 18.0,
@@ -55,7 +51,6 @@ GLOBAL_BENCHMARK = {
     'Other':              3.0,
 }
 
-# Map niche CSV segments to benchmark categories
 SEGMENT_MAP = {
     'Ground Stations':   'Other',
     'Navigation':        'Other',
@@ -72,13 +67,10 @@ def build_benchmark_df(source_df):
     india_total = india_seg['Funding_Cleaned'].sum()
     india_seg['India_Share'] = (india_seg['Funding_Cleaned'] / india_total * 100).round(1)
     india_seg = india_seg.rename(columns={'Segment_Mapped': 'Segment'})
-
     global_df = pd.DataFrame(list(GLOBAL_BENCHMARK.items()), columns=['Segment', 'Global_Share'])
     merged    = global_df.merge(india_seg[['Segment', 'India_Share']], on='Segment', how='left').fillna(0.0)
-    merged['Gap'] = (merged['India_Share'] - merged['Global_Share']).round(1)
-
     melted = merged.melt(
-        id_vars=['Segment', 'Gap'],
+        id_vars=['Segment'],
         value_vars=['Global_Share', 'India_Share'],
         var_name='Market', value_name='Share'
     )
@@ -86,81 +78,61 @@ def build_benchmark_df(source_df):
         'Global_Share': 'Global (BryceTech 2024)',
         'India_Share':  'India (This Dataset)'
     })
-    return merged, melted
+    return melted
 
-# Five company profiles
 PROFILES = [
     {
-        "name":        "Pixxel",
-        "segment":     "Earth Observation",
-        "model":       "Data-as-a-Service",
-        "customer":    "Agriculture, Mining, Govt, NASA",
+        "name": "Pixxel", "segment": "Earth Observation",
+        "model": "Data-as-a-Service", "customer": "Agriculture, Mining, Govt, NASA",
         "description": "Operates India's first hyperspectral satellite constellation. Sells analytics platform access, not raw imagery.",
-        "competitor":  "Planet Labs (USA), Satellogic (Argentina)",
-        "funding":     "$95M Series B"
+        "competitor": "Planet Labs (USA), Satellogic (Argentina)", "funding": "$95M Series B"
     },
     {
-        "name":        "SatSure",
-        "segment":     "Data Analytics",
-        "model":       "SaaS Platform",
-        "customer":    "Banks, Insurance firms, Agri Depts",
+        "name": "SatSure", "segment": "Data Analytics",
+        "model": "SaaS Platform", "customer": "Banks, Insurance firms, Agri Depts",
         "description": "Turns satellite data into crop loan risk scores for financial institutions. Pure analytics play.",
-        "competitor":  "Gro Intelligence (USA), Descartes Labs",
-        "funding":     "$29.5M Series A"
+        "competitor": "Gro Intelligence (USA), Descartes Labs", "funding": "$29.5M Series A"
     },
     {
-        "name":        "Digantara",
-        "segment":     "SSA",
-        "model":       "Data-as-a-Service",
-        "customer":    "Satellite operators, Defence, US Space Command",
+        "name": "Digantara", "segment": "SSA",
+        "model": "Data-as-a-Service", "customer": "Satellite operators, Defence, US Space Command",
         "description": "Space debris tracking and orbital intelligence. India's only commercial SSA play at scale.",
-        "competitor":  "LeoLabs (USA), ExoAnalytic Solutions",
-        "funding":     "$64.5M Series B"
+        "competitor": "LeoLabs (USA), ExoAnalytic Solutions", "funding": "$64.5M Series B"
     },
     {
-        "name":        "Skyroot Aerospace",
-        "segment":     "Launch Vehicles",
-        "model":       "Launch-as-a-Service",
-        "customer":    "Small-sat operators, ISRO, Startups",
+        "name": "Skyroot Aerospace", "segment": "Launch Vehicles",
+        "model": "Launch-as-a-Service", "customer": "Small-sat operators, ISRO, Startups",
         "description": "Developed Vikram-S, India's first privately launched rocket. Targeting small-sat rideshare market.",
-        "competitor":  "Rocket Lab (NZ), Firefly Aerospace (USA)",
-        "funding":     "$99.8M Series B"
+        "competitor": "Rocket Lab (NZ), Firefly Aerospace (USA)", "funding": "$99.8M Series B"
     },
     {
-        "name":        "Agnikul Cosmos",
-        "segment":     "Launch Vehicles",
-        "model":       "Launch-as-a-Service",
-        "customer":    "Small-sat operators, Research orgs",
-        "description": "Built the world's first single-piece 3D-printed rocket engine. Has its own private launchpad at Sriharikota.",
-        "competitor":  "ABL Space (USA), PLD Space (EU)",
-        "funding":     "$85.8M Pre-Series B"
+        "name": "Agnikul Cosmos", "segment": "Launch Vehicles",
+        "model": "Launch-as-a-Service", "customer": "Small-sat operators, Research orgs",
+        "description": "World's first single-piece 3D-printed rocket engine. Has its own private launchpad at Sriharikota.",
+        "competitor": "ABL Space (USA), PLD Space (EU)", "funding": "$85.8M Pre-Series B"
     },
 ]
 
-# Insight card text — numbers pulled from real data computed above
 INSIGHT_CARDS_DATA = [
     {
-        "num":      "01",
+        "num": "01",
         "headline": f"Launch Vehicles capture {lv_funding_pct}% of total funding.",
-        "body":     (f"Despite being only {lv_count_pct}% of startups, launch attracts the highest capital "
-                     f"intensity — signalling massive barriers to entry for new entrants.")
+        "body": f"Despite being only {lv_count_pct}% of startups, launch attracts the highest capital intensity — signalling massive barriers to entry."
     },
     {
-        "num":      "02",
+        "num": "02",
         "headline": f"SSA holds only {ssa_funding_pct}% of Indian NewSpace investment.",
-        "body":     (f"Compared to {GLOBAL_SSA_PCT}% globally (BryceTech 2024), SSA is the most "
-                     f"under-capitalised strategic gap in the ecosystem.")
+        "body": f"Compared to {GLOBAL_SSA_PCT}% globally (BryceTech 2024), SSA is the most under-capitalised strategic gap in the ecosystem."
     },
     {
-        "num":      "03",
+        "num": "03",
         "headline": f"{post2020_pct}% of active startups founded post-2020.",
-        "body":     ("The 2020 space liberalisation reforms are the primary driver of current market "
-                     "velocity. Policy, not technology, triggered the founding surge.")
+        "body": "The 2020 space liberalisation reforms are the primary driver of current market velocity. Policy, not technology, triggered the founding surge."
     },
 ]
 
 # ─────────────────────────────────────────────
-# 4. THEME DEFINITIONS
+# 4. THEMES
 # ─────────────────────────────────────────────
 THEMES = {
     'dark': {
@@ -190,37 +162,36 @@ THEMES = {
 }
 
 # ─────────────────────────────────────────────
-# 5. INITIALIZE APP
+# 5. APP INIT
 # ─────────────────────────────────────────────
 app = dash.Dash(__name__)
-server = app.server   # Required for Render deployment
+server = app.server
 
 # ─────────────────────────────────────────────
-# 6. HELPER — build insight cards (theme-aware)
+# 6. HELPER — insight cards
 # ─────────────────────────────────────────────
 def build_insight_cards(t):
-    cards = []
-    for c in INSIGHT_CARDS_DATA:
-        cards.append(html.Div([
+    return [
+        html.Div([
             html.Div(c["num"], style={
-                'fontSize': '32px', 'fontWeight': '800',
-                'color': t['accent'], 'opacity': '0.35',
-                'fontFamily': 'monospace'
+                'fontSize': '30px', 'fontWeight': '800',
+                'color': t['accent'], 'opacity': '0.35', 'fontFamily': 'monospace'
             }),
             html.P(c["headline"], style={
                 'fontSize': '14px', 'fontWeight': '700',
                 'color': t['text'], 'margin': '5px 0'
             }),
             html.P(c["body"], style={
-                'fontSize': '12px', 'color': t['subtext'], 'lineHeight': '1.5'
+                'fontSize': '12px', 'color': t['subtext'], 'lineHeight': '1.5', 'margin': '0'
             }),
         ], style={
             'flex': '1', 'minWidth': '200px', 'padding': '15px',
             'borderLeft': f"3px solid {t['accent']}",
             'backgroundColor': t['accent_muted'],
             'borderRadius': '0 8px 8px 0',
-        }))
-    return cards
+        })
+        for c in INSIGHT_CARDS_DATA
+    ]
 
 # ─────────────────────────────────────────────
 # 7. LAYOUT
@@ -236,7 +207,7 @@ app.layout = html.Div(id='main-container', children=[
                 src=app.get_asset_url('toggle.png'),
                 style={'width': '50px', 'cursor': 'pointer', 'transition': '0.3s'}
             ),
-            dcc.Store(id='theme-state', data='dark')
+            dcc.Store(id='theme-state', data='dark'),
         ], style={'display': 'flex', 'alignItems': 'center',
                   'justifyContent': 'flex-end', 'padding': '10px'}),
 
@@ -245,38 +216,36 @@ app.layout = html.Div(id='main-container', children=[
                 style={'textAlign': 'center', 'fontWeight': '800', 'margin': '0'}),
         html.P("Strategic Intelligence Dashboard | Q2 2026 Ecosystem Analysis",
                id='header-subtitle',
-               style={'textAlign': 'center', 'fontSize': '16px'}),
-    ], style={'padding': '10px 20px'}),
+               style={'textAlign': 'center', 'fontSize': '16px', 'marginTop': '6px'}),
+    ], style={'padding': '10px 20px 0 20px'}),
 
     # ── Key Market Findings ──────────────────────────────────────────────────
     html.Div([
-        html.H3("Key Market Findings", id='summary-title'),
+        html.H3("Key Market Findings", id='summary-title', style={'marginTop': '0'}),
         html.P(
-            "Strategic analysis of capital flows and segment maturity across 41 Indian NewSpace companies.",
+            "Strategic analysis of capital flows and segment maturity across 40 Indian NewSpace companies.",
             id='summary-intro'
         ),
         html.Div(id='insight-cards-row',
-                 style={'display': 'flex', 'gap': '16px', 'flexWrap': 'wrap'}),
-
+                 style={'display': 'flex', 'gap': '14px', 'flexWrap': 'wrap', 'marginTop': '16px'}),
         # Stat strip
         html.Div([
             html.Div([
                 html.Span(f"{total_companies}",
                           style={'fontSize': '22px', 'fontWeight': '700'}),
                 html.Span(" companies tracked",
-                          style={'fontSize': '13px', 'marginLeft': '4px'})
-            ], style={'marginRight': '30px', 'display': 'inline-block'}),
+                          style={'fontSize': '13px', 'marginLeft': '6px'}),
+            ], style={'display': 'inline-block', 'marginRight': '32px'}),
             html.Div([
                 html.Span(f"${total_funding:.0f}M",
                           style={'fontSize': '22px', 'fontWeight': '700'}),
                 html.Span(" total funding tracked",
-                          style={'fontSize': '13px', 'marginLeft': '4px'})
+                          style={'fontSize': '13px', 'marginLeft': '6px'}),
             ], style={'display': 'inline-block'}),
         ], id='stat-strip',
-           style={'marginTop': '20px', 'paddingTop': '15px', 'borderTop': '1px solid'}),
-
+           style={'marginTop': '20px', 'paddingTop': '15px'}),
     ], id='summary-card',
-       style={'padding': '25px', 'borderRadius': '12px', 'marginBottom': '30px'}),
+       style={'padding': '25px', 'borderRadius': '12px', 'marginBottom': '24px'}),
 
     # ── City Filter ─────────────────────────────────────────────────────────
     html.Div([
@@ -285,62 +254,75 @@ app.layout = html.Div(id='main-container', children=[
             id='city-filter',
             options=[{'label': i, 'value': i} for i in sorted(df['HQ'].unique())],
             value=None,
-            placeholder="Search City Hub...",
-            style={'marginTop': '10px', 'color': '#000'}
+            placeholder="Filter by city hub...",
+            style={'marginTop': '8px', 'color': '#000'}
         )
-    ], style={'width': '35%', 'margin': '40px auto'}),
+    ], style={'width': '35%', 'margin': '0 auto 32px auto'}),
 
     # ── Chart Row 1 ─────────────────────────────────────────────────────────
+    # Each chart lives in its OWN styled wrapper div — this is what gives spacing.
+    # The card border/bg is on the OUTER div, graph sits inside with no extra padding.
     html.Div([
-        html.Div([dcc.Graph(id='treemap-chart')], id='card-1',
-                 style={'width': '49%', 'display': 'inline-block',
-                        'verticalAlign': 'top', 'boxSizing': 'border-box',
-                        'paddingRight': '8px'}),
-        html.Div([dcc.Graph(id='bar-chart')], id='card-2',
-                 style={'width': '49%', 'display': 'inline-block',
-                        'verticalAlign': 'top', 'boxSizing': 'border-box',
-                        'paddingLeft': '8px'}),
-    ], style={'marginBottom': '20px'}),
+        # Chart 1 wrapper
+        html.Div(
+            dcc.Graph(id='treemap-chart', config={'displayModeBar': False}),
+            id='card-1'
+        ),
+        # Chart 2 wrapper
+        html.Div(
+            dcc.Graph(id='bar-chart', config={'displayModeBar': False}),
+            id='card-2'
+        ),
+    ], style={
+        'display': 'flex',
+        'gap': '20px',           # ← THIS is what creates the space between charts
+        'marginBottom': '20px',
+    }),
 
     # ── Chart Row 2 ─────────────────────────────────────────────────────────
     html.Div([
-        html.Div([dcc.Graph(id='line-chart')], id='card-3',
-                 style={'width': '49%', 'display': 'inline-block',
-                        'verticalAlign': 'top', 'boxSizing': 'border-box',
-                        'paddingRight': '8px'}),
-        html.Div([dcc.Graph(id='bubble-chart')], id='card-4',
-                 style={'width': '49%', 'display': 'inline-block',
-                        'verticalAlign': 'top', 'boxSizing': 'border-box',
-                        'paddingLeft': '8px'}),
-    ], style={'marginBottom': '30px'}),
+        html.Div(
+            dcc.Graph(id='line-chart', config={'displayModeBar': False}),
+            id='card-3'
+        ),
+        html.Div(
+            dcc.Graph(id='bubble-chart', config={'displayModeBar': False}),
+            id='card-4'
+        ),
+    ], style={
+        'display': 'flex',
+        'gap': '20px',
+        'marginBottom': '20px',
+    }),
 
-    # ── Chart 5: Benchmark Gap Analysis ────────────────────────────────────
+    # ── Chart 5: Benchmark — full width ────────────────────────────────────
     html.Div([
         html.H4("India vs Global Gap Analysis",
                 id='benchmark-label',
-                style={'margin': '0', 'padding': '15px 15px 0 15px'}),
+                style={'margin': '0 0 4px 0'}),
         html.P(
             "How India's investment mix compares to global private space funding (BryceTech 2024).",
             id='benchmark-sublabel',
-            style={'fontSize': '12px', 'padding': '4px 15px 0 15px'}
+            style={'fontSize': '12px', 'margin': '0 0 8px 0'}
         ),
-        dcc.Graph(id='benchmark-chart'),
+        dcc.Graph(id='benchmark-chart', config={'displayModeBar': False}),
         html.P(
             "Source: BryceTech Start-Up Space 2024 (Global) | Custom Dataset (India)",
             id='benchmark-source',
-            style={'fontSize': '11px', 'padding': '4px 15px 12px 15px'}
+            style={'fontSize': '11px', 'margin': '4px 0 0 0'}
         ),
-    ], id='card-5', style={'borderRadius': '12px', 'marginBottom': '30px'}),
+    ], id='card-5', style={'padding': '20px', 'borderRadius': '12px', 'marginBottom': '20px'}),
 
-    # ── Startup Intelligence Profiles ───────────────────────────────────────
+    # ── Startup Intelligence Profiles ────────────────────────────────────────
     html.Div([
         html.H3("Startup Intelligence Profiles",
                 id='profiles-title',
-                style={'marginBottom': '20px'}),
+                style={'marginTop': '0', 'marginBottom': '16px'}),
         html.Div(id='profiles-row',
                  style={'display': 'flex', 'gap': '16px',
-                        'overflowX': 'auto', 'paddingBottom': '10px'})
-    ], id='profiles-section', style={'padding': '20px', 'marginBottom': '30px'}),
+                        'overflowX': 'auto', 'paddingBottom': '8px'}),
+    ], id='profiles-section',
+       style={'padding': '25px', 'borderRadius': '12px', 'marginBottom': '20px'}),
 
 ])
 
@@ -391,86 +373,116 @@ def toggle_theme_logic(n, current):
 def update_dashboard(selected_city, theme_mode):
     t = THEMES[theme_mode]
 
-    # ── Shared style objects ────────────────────────────────────────────────
+    # ── Styles ──────────────────────────────────────────────────────────────
     main_style = {
         'backgroundColor': t['background'], 'color': t['text'],
-        'minHeight': '100vh', 'padding': '30px', 'transition': '0.3s'
+        'minHeight': '100vh', 'padding': '30px', 'transition': '0.3s',
+        'fontFamily': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }
-    base_card = {
+
+    # THE FIX: chart cards use flex:1 so they share space equally inside the
+    # flex-row container. The gap on the ROW container (set in layout) provides
+    # the visible space between them. No more inline-block / width:49% issues.
+    chart_card_style = {
+        'flex': '1',                        # equal width, fills available space
         'backgroundColor': t['card_bg'],
         'border':          f"1px solid {t['border']}",
         'borderRadius':    '12px',
-        'padding':         '15px',
+        'overflow':        'hidden',        # clips graph cleanly to card edges
         'transition':      '0.3s',
     }
-    card_left  = {**base_card, 'width': '49%', 'display': 'inline-block',
-                  'verticalAlign': 'top', 'boxSizing': 'border-box', 'paddingRight': '8px'}
-    card_right = {**base_card, 'width': '49%', 'display': 'inline-block',
-                  'verticalAlign': 'top', 'boxSizing': 'border-box', 'paddingLeft': '8px'}
-    summary_card_style = {**base_card, 'padding': '25px', 'marginBottom': '30px'}
-    full_card_style    = {**base_card, 'marginBottom': '30px'}
-    profiles_style     = {**base_card, 'padding': '20px', 'marginBottom': '30px'}
 
-    img_style = {
-        'width': '50px', 'cursor': 'pointer',
-        'transform': 'rotate(180deg)' if theme_mode == 'light' else 'rotate(0deg)',
-        'transition': '0.3s'
+    summary_card_style = {
+        'backgroundColor': t['card_bg'],
+        'border':          f"1px solid {t['border']}",
+        'borderRadius':    '12px',
+        'padding':         '25px',
+        'marginBottom':    '24px',
+        'transition':      '0.3s',
+    }
+    full_card_style = {
+        'backgroundColor': t['card_bg'],
+        'border':          f"1px solid {t['border']}",
+        'borderRadius':    '12px',
+        'padding':         '20px',
+        'marginBottom':    '20px',
+        'transition':      '0.3s',
+    }
+    profiles_style = {
+        'backgroundColor': t['card_bg'],
+        'border':          f"1px solid {t['border']}",
+        'borderRadius':    '12px',
+        'padding':         '25px',
+        'marginBottom':    '20px',
+        'transition':      '0.3s',
     }
     stat_strip_style = {
         'marginTop': '20px', 'paddingTop': '15px',
-        'borderTop': f"1px solid {t['border']}"
+        'borderTop': f"1px solid {t['border']}",
+    }
+    img_style = {
+        'width': '50px', 'cursor': 'pointer',
+        'transform': 'rotate(180deg)' if theme_mode == 'light' else 'rotate(0deg)',
+        'transition': '0.3s',
     }
 
-    # ── Dynamic children ────────────────────────────────────────────────────
+    # ── Insight cards ───────────────────────────────────────────────────────
     insight_children = build_insight_cards(t)
 
-    profile_cards = []
-    for p in PROFILES:
-        profile_cards.append(html.Div([
+    # ── Profile cards ───────────────────────────────────────────────────────
+    profile_cards = [
+        html.Div([
             html.Div(p['name'], style={
-                'fontSize': '18px', 'fontWeight': '700', 'color': t['accent']
+                'fontSize': '17px', 'fontWeight': '700', 'color': t['accent']
             }),
             html.Span(p['segment'], style={
                 'fontSize': '10px', 'background': t['accent_muted'],
-                'color': t['accent'], 'padding': '2px 6px', 'borderRadius': '8px'
+                'color': t['accent'], 'padding': '2px 8px', 'borderRadius': '8px',
+                'display': 'inline-block', 'marginTop': '4px',
             }),
             html.P(p['description'], style={
-                'fontSize': '12px', 'marginTop': '8px', 'lineHeight': '1.5'
+                'fontSize': '12px', 'marginTop': '10px',
+                'lineHeight': '1.5', 'color': t['text'],
             }),
             html.P(f"Model: {p['model']}",
-                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '3px 0'}),
+                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '4px 0'}),
             html.P(f"Customers: {p['customer']}",
-                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '3px 0'}),
+                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '4px 0'}),
             html.P(f"Global peer: {p['competitor']}",
-                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '3px 0'}),
+                   style={'fontSize': '11px', 'color': t['subtext'], 'margin': '4px 0'}),
             html.P(p['funding'], style={
                 'fontSize': '13px', 'fontWeight': '700',
-                'color': '#3fb950', 'marginTop': '8px'
+                'color': '#3fb950', 'marginTop': '10px', 'margin': '10px 0 0 0',
             }),
         ], style={
-            'padding':         '15px',
+            'padding':         '16px',
             'border':          f"1px solid {t['border']}",
-            'backgroundColor': t['card_bg'],
+            'backgroundColor': t['background'],  # slightly different from card bg for depth
             'borderRadius':    '10px',
-            'minWidth':        '240px',
+            'minWidth':        '230px',
+            'maxWidth':        '260px',
             'flexShrink':      '0',
-        }))
+        })
+        for p in PROFILES
+    ]
 
-    # ── Filter data ─────────────────────────────────────────────────────────
+    # ── Filter ──────────────────────────────────────────────────────────────
     filtered_df = df if selected_city is None else df[df['HQ'] == selected_city]
 
-    def apply_fig_theme(fig):
+    def apply_theme(fig):
         fig.update_layout(
             template=t['plotly_template'],
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             font_color=t['text'],
-            margin=dict(t=50, b=30, l=20, r=20)
+            font_size=12,
+            margin=dict(t=50, b=40, l=20, r=20),
+            legend=dict(font=dict(size=11)),
         )
         return fig
 
-    # ── Chart 1: Treemap — Market Concentration ──────────────────────────
-    fig1 = apply_fig_theme(px.treemap(
+    # ── Fig 1: Treemap ───────────────────────────────────────────────────────
+    fig1 = apply_theme(px.treemap(
         filtered_df,
         path=['Segment', 'Company'],
         values='Funding_Cleaned',
@@ -478,98 +490,99 @@ def update_dashboard(selected_city, theme_mode):
         color='Funding_Cleaned',
         color_continuous_scale='Blues',
     ))
+    fig1.update_traces(textfont_size=12)
 
-    # ── Chart 2: Bar — Funding by Segment ───────────────────────────────
+    # ── Fig 2: Bar — Segment Funding ─────────────────────────────────────────
     seg_data = (filtered_df
                 .groupby('Segment')['Funding_Cleaned']
-                .sum()
-                .reset_index()
+                .sum().reset_index()
                 .sort_values('Funding_Cleaned', ascending=False))
-    fig2 = apply_fig_theme(px.bar(
-        seg_data,
-        x='Segment', y='Funding_Cleaned',
+    fig2 = apply_theme(px.bar(
+        seg_data, x='Segment', y='Funding_Cleaned',
         title="Total Funding by Segment ($M)",
         color='Funding_Cleaned',
         color_continuous_scale='Viridis',
-        labels={'Funding_Cleaned': 'Funding ($M)'}
+        labels={'Funding_Cleaned': 'Funding ($M)', 'Segment': ''},
     ))
-    fig2.update_xaxes(tickangle=-30)
+    fig2.update_xaxes(tickangle=-35)
 
-    # ── Chart 3: Line — Founding Velocity ───────────────────────────────
+    # ── Fig 3: Line — Founding Velocity ──────────────────────────────────────
     growth = (filtered_df
               .groupby('Year_Founded')['Company']
-              .count()
-              .reset_index()
+              .count().reset_index()
               .rename(columns={'Company': 'Startups_Founded'}))
-    fig3 = apply_fig_theme(px.line(
-        growth,
-        x='Year_Founded', y='Startups_Founded',
+    fig3 = apply_theme(px.line(
+        growth, x='Year_Founded', y='Startups_Founded',
         title="Startup Founding Velocity",
         markers=True,
-        labels={'Startups_Founded': 'Startups Founded', 'Year_Founded': 'Year'}
+        labels={'Startups_Founded': 'Startups Founded', 'Year_Founded': 'Year'},
     ))
-    fig3.update_traces(line_color=t['accent'], line_width=2)
+    fig3.update_traces(line_color=t['accent'], line_width=2.5, marker_size=7)
     fig3.add_vline(
         x=2020, line_dash='dash', line_color='#f78166',
-        annotation_text="2020 Reforms", annotation_position="top right"
+        annotation_text=" 2020 Reforms",
+        annotation_font_color='#f78166',
+        annotation_position="top right",
     )
 
-    # ── Chart 4: Bubble — Market Opportunity Matrix ──────────────────────
+    # ── Fig 4: Bubble — Market Opportunity Matrix ────────────────────────────
     matrix = (filtered_df
               .groupby('Segment')
               .agg(Count=('Company', 'count'), Total=('Funding_Cleaned', 'sum'))
               .reset_index())
     matrix['Avg_Funding'] = (matrix['Total'] / matrix['Count']).round(2)
-    fig4 = apply_fig_theme(px.scatter(
-        matrix,
-        x='Count', y='Avg_Funding',
+    fig4 = apply_theme(px.scatter(
+        matrix, x='Count', y='Avg_Funding',
         size='Total', color='Segment',
         hover_name='Segment',
         title="Market Opportunity Matrix",
-        labels={'Count': 'Number of Startups',
-                'Avg_Funding': 'Avg Funding per Startup ($M)'}
+        labels={'Count': 'Number of Startups', 'Avg_Funding': 'Avg Funding / Startup ($M)'},
+        size_max=60,
     ))
 
-    # ── Chart 5: Benchmark Gap Analysis — always full dataset ────────────
-    _, melted_bm = build_benchmark_df(df)
-    global_data  = melted_bm[melted_bm['Market'] == 'Global (BryceTech 2024)']
-    india_data   = melted_bm[melted_bm['Market'] == 'India (This Dataset)']
+    # ── Fig 5: Benchmark grouped bar ─────────────────────────────────────────
+    melted_bm   = build_benchmark_df(df)   # always full dataset
+    global_data = melted_bm[melted_bm['Market'] == 'Global (BryceTech 2024)']
+    india_data  = melted_bm[melted_bm['Market'] == 'India (This Dataset)']
 
     fig5 = go.Figure()
     fig5.add_trace(go.Bar(
         name='Global (BryceTech 2024)',
-        x=global_data['Segment'],
-        y=global_data['Share'],
+        x=global_data['Segment'], y=global_data['Share'],
         marker_color=t['bar_global'],
     ))
     fig5.add_trace(go.Bar(
         name='India (This Dataset)',
-        x=india_data['Segment'],
-        y=india_data['Share'],
+        x=india_data['Segment'], y=india_data['Share'],
         marker_color=t['bar_india'],
     ))
-    fig5.update_layout(barmode='group', title="India vs Global NewSpace Investment Mix")
-    apply_fig_theme(fig5)
+    fig5.update_layout(
+        barmode='group',
+        yaxis_title='Share of Total Investment (%)',
+        xaxis_title='',
+        margin=dict(t=20, b=40, l=20, r=20),
+    )
+    apply_theme(fig5)
 
-    # ── Return (order must match Output list exactly) ────────────────────
+    # ── Return (must match Output order exactly) ─────────────────────────────
     return (
         main_style,
         {'textAlign': 'center', 'color': t['accent'], 'fontWeight': '800', 'margin': '0'},
         summary_card_style,
-        {'color': t['accent']},
+        {'color': t['accent'], 'marginTop': '0'},
         {'color': t['subtext'], 'fontSize': '14px'},
         insight_children,
         stat_strip_style,
         img_style,
-        card_left,        # card-1
-        card_right,       # card-2
-        card_left,        # card-3
-        card_right,       # card-4
-        full_card_style,  # card-5
-        {'color': t['text'],    'margin': '0', 'padding': '15px 15px 0 15px'},
-        {'color': t['subtext'], 'fontSize': '12px', 'padding': '4px 15px 0 15px'},
-        {'color': t['subtext'], 'fontSize': '11px', 'padding': '4px 15px 12px 15px'},
-        {'color': t['accent'],  'marginBottom': '20px'},
+        chart_card_style,   # card-1
+        chart_card_style,   # card-2
+        chart_card_style,   # card-3
+        chart_card_style,   # card-4
+        full_card_style,    # card-5
+        {'color': t['text'],    'margin': '0 0 4px 0', 'fontSize': '16px', 'fontWeight': '700'},
+        {'color': t['subtext'], 'fontSize': '12px', 'margin': '0 0 8px 0'},
+        {'color': t['subtext'], 'fontSize': '11px', 'margin': '4px 0 0 0'},
+        {'color': t['accent'],  'marginTop': '0', 'marginBottom': '16px'},
         profiles_style,
         profile_cards,
         fig1, fig2, fig3, fig4, fig5,
