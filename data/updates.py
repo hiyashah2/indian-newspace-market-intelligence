@@ -1,12 +1,10 @@
 import pandas as pd
 import re
 
-# 1. Load the data
 file_path = 'data/indian_space_startups.csv'
 df = pd.read_csv(file_path)
 df.set_index('Company', inplace=True)
 
-# 2. Apply the Funding & Detail Updates
 updates = {
     'Bellatrix Aerospace': {'Total_Funding_USD_Est': '$34.4M', 'Last_Funding_Date': '2026', 'Funding_Round_Type': 'Series A'},
     'GalaxEye': {'Total_Funding_USD_Est': '$18.8M', 'Last_Funding_Date': '2026'},
@@ -25,14 +23,12 @@ for company, changes in updates.items():
         for column, value in changes.items():
             df.at[company, column] = value
 
-# 3. Clean the 'Last_Funding_Date' column (Years Only) for EVERYONE
 def clean_year(val):
     match = re.search(r'\d{4}', str(val))
     return match.group(0) if match else val
 
 df['Last_Funding_Date'] = df['Last_Funding_Date'].apply(clean_year)
 
-# 4. Save it directly back to the data folder
 df.reset_index(inplace=True)
 df.to_csv(file_path, index=False)
 
