@@ -21,7 +21,7 @@ def clean_currency(value):
 df['Funding_Cleaned'] = df['Total_Funding_USD_Est'].apply(clean_currency)
 
 # ─────────────────────────────────────────────
-# 2. PRE-COMPUTED ANALYTICS (for insight cards)
+# 2. PRE-COMPUTED ANALYTICS
 # ─────────────────────────────────────────────
 total_funding   = df['Funding_Cleaned'].sum()
 total_companies = len(df)
@@ -164,7 +164,15 @@ THEMES = {
 # ─────────────────────────────────────────────
 # 5. APP INIT
 # ─────────────────────────────────────────────
-app = dash.Dash(__name__)
+# meta_tags viewport is MANDATORY for mobile responsiveness.
+# Without it, mobile browsers render at ~980px and ignore your CSS breakpoints.
+app = dash.Dash(
+    __name__,
+    meta_tags=[{
+        "name": "viewport",
+        "content": "width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    }]
+)
 server = app.server
 
 # ─────────────────────────────────────────────
@@ -182,9 +190,13 @@ def build_insight_cards(t):
                 'color': t['text'], 'margin': '5px 0'
             }),
             html.P(c["body"], style={
-                'fontSize': '12px', 'color': t['subtext'], 'lineHeight': '1.5', 'margin': '0'
+                'fontSize': '12px', 'color': t['subtext'],
+                'lineHeight': '1.5', 'margin': '0'
             }),
-        ], style={
+        ],
+        # className hooks responsive.css — DO NOT remove
+        className='insight-card',
+        style={
             'flex': '1', 'minWidth': '200px', 'padding': '15px',
             'borderLeft': f"3px solid {t['accent']}",
             'backgroundColor': t['accent_muted'],
@@ -210,7 +222,6 @@ app.layout = html.Div(id='main-container', children=[
             dcc.Store(id='theme-state', data='dark'),
         ], style={'display': 'flex', 'alignItems': 'center',
                   'justifyContent': 'flex-end', 'padding': '10px'}),
-
         html.H1("India NewSpace Market Intelligence",
                 id='header-title',
                 style={'textAlign': 'center', 'fontWeight': '800', 'margin': '0'}),
@@ -226,9 +237,8 @@ app.layout = html.Div(id='main-container', children=[
             "Strategic analysis of capital flows and segment maturity across 40 Indian NewSpace companies.",
             id='summary-intro'
         ),
-        html.Div(id='insight-cards-row',
-                 style={'display': 'flex', 'gap': '14px', 'flexWrap': 'wrap', 'marginTop': '16px'}),
-        # Stat strip
+        # className='insight-row' → stacks vertically on mobile via CSS
+        html.Div(id='insight-cards-row', className='insight-row'),
         html.Div([
             html.Div([
                 html.Span(f"{total_companies}",
@@ -242,12 +252,12 @@ app.layout = html.Div(id='main-container', children=[
                 html.Span(" total funding tracked",
                           style={'fontSize': '13px', 'marginLeft': '6px'}),
             ], style={'display': 'inline-block'}),
-        ], id='stat-strip',
-           style={'marginTop': '20px', 'paddingTop': '15px'}),
+        ], id='stat-strip', style={'marginTop': '20px', 'paddingTop': '15px'}),
     ], id='summary-card',
        style={'padding': '25px', 'borderRadius': '12px', 'marginBottom': '24px'}),
 
     # ── City Filter ─────────────────────────────────────────────────────────
+    # className='filter-container' → CSS makes this full-width on mobile
     html.Div([
         html.Label("Strategic Hub Filter:", style={'fontWeight': 'bold'}),
         dcc.Dropdown(
@@ -257,41 +267,42 @@ app.layout = html.Div(id='main-container', children=[
             placeholder="Filter by city hub...",
             style={'marginTop': '8px', 'color': '#000'}
         )
-    ], style={'width': '35%', 'margin': '0 auto 32px auto'}),
+    ], className='filter-container'),
 
     # ── Chart Row 1 ─────────────────────────────────────────────────────────
+    # className='chart-row' → CSS switches to flex-direction:column on mobile
     html.Div([
         html.Div(
-            dcc.Graph(id='treemap-chart', config={'displayModeBar': True}), # Changed to True
-            id='card-1'
+            dcc.Graph(id='treemap-chart',
+                      config={'displayModeBar': False, 'responsive': True},
+                      style={'height': '380px'}),
+            id='card-1', className='chart-card'
         ),
         html.Div(
-            dcc.Graph(id='bar-chart', config={'displayModeBar': True}),     # Changed to True
-            id='card-2'
+            dcc.Graph(id='bar-chart',
+                      config={'displayModeBar': False, 'responsive': True},
+                      style={'height': '380px'}),
+            id='card-2', className='chart-card'
         ),
-    ], style={
-        'display': 'flex',
-        'gap': '20px',
-        'marginBottom': '20px',
-    }),
+    ], className='chart-row'),
 
     # ── Chart Row 2 ─────────────────────────────────────────────────────────
     html.Div([
         html.Div(
-            dcc.Graph(id='line-chart', config={'displayModeBar': True}),    # Changed to True
-            id='card-3'
+            dcc.Graph(id='line-chart',
+                      config={'displayModeBar': False, 'responsive': True},
+                      style={'height': '380px'}),
+            id='card-3', className='chart-card'
         ),
         html.Div(
-            dcc.Graph(id='bubble-chart', config={'displayModeBar': True}),  # Changed to True
-            id='card-4'
+            dcc.Graph(id='bubble-chart',
+                      config={'displayModeBar': False, 'responsive': True},
+                      style={'height': '380px'}),
+            id='card-4', className='chart-card'
         ),
-    ], style={
-        'display': 'flex',
-        'gap': '20px',
-        'marginBottom': '20px',
-    }),
+    ], className='chart-row'),
 
-    # ── Chart 5: Benchmark — full width ────────────────────────────────────
+    # ── Chart 5: Benchmark — full width ─────────────────────────────────────
     html.Div([
         html.H4("India vs Global Gap Analysis",
                 id='benchmark-label',
@@ -301,22 +312,24 @@ app.layout = html.Div(id='main-container', children=[
             id='benchmark-sublabel',
             style={'fontSize': '12px', 'margin': '0 0 8px 0'}
         ),
-        dcc.Graph(id='benchmark-chart', config={'displayModeBar': True}), # Changed to True
+        dcc.Graph(id='benchmark-chart',
+                  config={'displayModeBar': False, 'responsive': True},
+                  style={'height': '400px'}),
         html.P(
             "Source: BryceTech Start-Up Space 2024 (Global) | Custom Dataset (India)",
             id='benchmark-source',
             style={'fontSize': '11px', 'margin': '4px 0 0 0'}
         ),
-    ], id='card-5', style={'padding': '20px', 'borderRadius': '12px', 'marginBottom': '20px'}),
+    ], id='card-5',
+       style={'padding': '20px', 'borderRadius': '12px', 'marginBottom': '20px'}),
 
     # ── Startup Intelligence Profiles ────────────────────────────────────────
     html.Div([
         html.H3("Startup Intelligence Profiles",
                 id='profiles-title',
                 style={'marginTop': '0', 'marginBottom': '16px'}),
-        html.Div(id='profiles-row',
-                 style={'display': 'flex', 'gap': '16px',
-                        'overflowX': 'auto', 'paddingBottom': '8px'}),
+        # className='profiles-scroll' → CSS gives touch scroll-snap on mobile
+        html.Div(id='profiles-row', className='profiles-scroll'),
     ], id='profiles-section',
        style={'padding': '25px', 'borderRadius': '12px', 'marginBottom': '20px'}),
 
@@ -376,18 +389,17 @@ def update_dashboard(selected_city, theme_mode):
         'fontFamily': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }
 
-    # THE FIX: chart cards use flex:1 so they share space equally inside the
-    # flex-row container. The gap on the ROW container (set in layout) provides
-    # the visible space between them. No more inline-block / width:49% issues.
+    # IMPORTANT: chart_card_style sets ONLY visual properties (color, border).
+    # Width and flex behaviour come from .chart-card in responsive.css.
+    # If you add 'width' or 'flex' here, it will override the CSS and
+    # break mobile layout. Keep these two concerns separate.
     chart_card_style = {
-        'flex': '1',                        # equal width, fills available space
         'backgroundColor': t['card_bg'],
         'border':          f"1px solid {t['border']}",
         'borderRadius':    '12px',
-        'overflow':        'hidden',        # clips graph cleanly to card edges
+        'overflow':        'hidden',
         'transition':      '0.3s',
     }
-
     summary_card_style = {
         'backgroundColor': t['card_bg'],
         'border':          f"1px solid {t['border']}",
@@ -413,8 +425,9 @@ def update_dashboard(selected_city, theme_mode):
         'transition':      '0.3s',
     }
     stat_strip_style = {
-        'marginTop': '20px', 'paddingTop': '15px',
-        'borderTop': f"1px solid {t['border']}",
+        'marginTop':  '20px',
+        'paddingTop': '15px',
+        'borderTop':  f"1px solid {t['border']}",
     }
     img_style = {
         'width': '50px', 'cursor': 'pointer',
@@ -448,12 +461,14 @@ def update_dashboard(selected_city, theme_mode):
                    style={'fontSize': '11px', 'color': t['subtext'], 'margin': '4px 0'}),
             html.P(p['funding'], style={
                 'fontSize': '13px', 'fontWeight': '700',
-                'color': '#3fb950', 'marginTop': '10px', 'margin': '10px 0 0 0',
+                'color': '#3fb950', 'margin': '10px 0 0 0',
             }),
-        ], style={
+        ],
+        className='profile-card',
+        style={
             'padding':         '16px',
             'border':          f"1px solid {t['border']}",
-            'backgroundColor': t['background'],  # slightly different from card bg for depth
+            'backgroundColor': t['background'],
             'borderRadius':    '10px',
             'minWidth':        '230px',
             'maxWidth':        '260px',
@@ -462,7 +477,7 @@ def update_dashboard(selected_city, theme_mode):
         for p in PROFILES
     ]
 
-    # ── Filter ──────────────────────────────────────────────────────────────
+    # ── Data filter (charts 1–4 only) ───────────────────────────────────────
     filtered_df = df if selected_city is None else df[df['HQ'] == selected_city]
 
     def apply_theme(fig):
@@ -474,6 +489,7 @@ def update_dashboard(selected_city, theme_mode):
             font_size=12,
             margin=dict(t=50, b=40, l=20, r=20),
             legend=dict(font=dict(size=11)),
+            autosize=True,   # fills container — works with responsive:True in config
         )
         return fig
 
@@ -488,7 +504,7 @@ def update_dashboard(selected_city, theme_mode):
     ))
     fig1.update_traces(textfont_size=12)
 
-    # ── Fig 2: Bar — Segment Funding ─────────────────────────────────────────
+    # ── Fig 2: Bar ──────────────────────────────────────────────────────────
     seg_data = (filtered_df
                 .groupby('Segment')['Funding_Cleaned']
                 .sum().reset_index()
@@ -502,7 +518,7 @@ def update_dashboard(selected_city, theme_mode):
     ))
     fig2.update_xaxes(tickangle=-35)
 
-    # ── Fig 3: Line — Founding Velocity ──────────────────────────────────────
+    # ── Fig 3: Line ─────────────────────────────────────────────────────────
     growth = (filtered_df
               .groupby('Year_Founded')['Company']
               .count().reset_index()
@@ -521,7 +537,7 @@ def update_dashboard(selected_city, theme_mode):
         annotation_position="top right",
     )
 
-    # ── Fig 4: Bubble — Market Opportunity Matrix ────────────────────────────
+    # ── Fig 4: Bubble ───────────────────────────────────────────────────────
     matrix = (filtered_df
               .groupby('Segment')
               .agg(Count=('Company', 'count'), Total=('Funding_Cleaned', 'sum'))
@@ -532,12 +548,12 @@ def update_dashboard(selected_city, theme_mode):
         size='Total', color='Segment',
         hover_name='Segment',
         title="Market Opportunity Matrix",
-        labels={'Count': 'Number of Startups', 'Avg_Funding': 'Avg Funding / Startup ($M)'},
+        labels={'Count': 'No. of Startups', 'Avg_Funding': 'Avg Funding / Startup ($M)'},
         size_max=60,
     ))
 
-    # ── Fig 5: Benchmark grouped bar ─────────────────────────────────────────
-    melted_bm   = build_benchmark_df(df)   # always full dataset
+    # ── Fig 5: Benchmark ─────────────────────────────────────────────────────
+    melted_bm   = build_benchmark_df(df)
     global_data = melted_bm[melted_bm['Market'] == 'Global (BryceTech 2024)']
     india_data  = melted_bm[melted_bm['Market'] == 'India (This Dataset)']
 
@@ -556,11 +572,16 @@ def update_dashboard(selected_city, theme_mode):
         barmode='group',
         yaxis_title='Share of Total Investment (%)',
         xaxis_title='',
-        margin=dict(t=20, b=40, l=20, r=20),
+        margin=dict(t=20, b=60, l=30, r=20),
+        legend=dict(
+            orientation='h',          # horizontal legend fits narrow mobile screens
+            yanchor='bottom', y=1.02,
+            xanchor='right',  x=1,
+        ),
     )
     apply_theme(fig5)
 
-    # ── Return (must match Output order exactly) ─────────────────────────────
+    # ── Return (order must match Output list exactly) ────────────────────────
     return (
         main_style,
         {'textAlign': 'center', 'color': t['accent'], 'fontWeight': '800', 'margin': '0'},
