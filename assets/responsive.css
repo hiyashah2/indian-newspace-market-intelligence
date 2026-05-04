@@ -1,0 +1,228 @@
+/* ═══════════════════════════════════════════════════════════════
+   India NewSpace Market Intelligence — Responsive Stylesheet
+   Handles mobile layout for Plotly Dash dashboard.
+   Dash auto-loads all files in /assets — no import needed in Python.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Base: ensure box-sizing is sane everywhere ─────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ── Prevent horizontal scroll on the page body ─────────────────── */
+body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%; /* stop iOS from auto-scaling text */
+}
+
+/* ── Chart rows: flex row on desktop ────────────────────────────── */
+.chart-row {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* ── Chart cards: equal width inside a row ──────────────────────── */
+.chart-card {
+  flex: 1;
+  min-width: 0;           /* critical: stops flex children overflowing */
+  border-radius: 12px;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+/* ── Plotly graphs: always fill their card ──────────────────────── */
+.chart-card .js-plotly-plot,
+.chart-card .plot-container,
+#benchmark-chart .js-plotly-plot,
+#benchmark-chart .plot-container {
+  width: 100% !important;
+}
+
+/* ── Filter container ───────────────────────────────────────────── */
+.filter-container {
+  width: 35%;
+  margin: 0 auto 32px auto;
+}
+
+/* ── Profile cards: horizontal scroll with snap ─────────────────── */
+.profiles-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scroll on iOS */
+}
+
+.profile-card {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  min-width: 230px;
+  max-width: 260px;
+  border-radius: 10px;
+}
+
+/* ── Insight cards: wrap nicely on medium screens ───────────────── */
+.insight-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.insight-card {
+  flex: 1;
+  min-width: 200px;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TABLET  (≤ 900px): two-column → one column for side charts
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .filter-container {
+    width: 60%;
+  }
+
+  .insight-card {
+    min-width: 160px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE  (≤ 768px): stack everything vertically
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Page padding shrinks ─────────────────────────────────── */
+  #main-container {
+    padding: 14px !important;
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  #header-title {
+    font-size: 20px !important;
+    line-height: 1.3;
+  }
+
+  #header-subtitle {
+    font-size: 13px !important;
+  }
+
+  /* ── Theme toggle row ────────────────────────────────────── */
+  #theme-toggle-img {
+    width: 40px !important;
+  }
+
+  /* ── Chart ROWS: stack vertically ────────────────────────── */
+  .chart-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── Each chart card: full width, fixed height for readability */
+  .chart-card {
+    flex: none;
+    width: 100%;
+  }
+
+  /* ── Give Plotly graphs a fixed height on mobile ─────────── */
+  /* Without this, charts collapse to ~0px when stacked        */
+  .chart-card .js-plotly-plot {
+    height: 320px !important;
+  }
+
+  /* Treemap needs a bit more room */
+  #card-1 .js-plotly-plot {
+    height: 360px !important;
+  }
+
+  /* Benchmark chart: full width, enough height for all bars */
+  #card-5 .js-plotly-plot {
+    height: 380px !important;
+  }
+
+  /* ── Filter: full width on mobile ───────────────────────── */
+  .filter-container {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  /* ── Summary card padding ────────────────────────────────── */
+  #summary-card {
+    padding: 16px !important;
+  }
+
+  /* ── Insight cards: stack vertically on very narrow screens  */
+  .insight-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .insight-card {
+    min-width: 100%;
+  }
+
+  /* ── Stat strip: stack numbers ───────────────────────────── */
+  #stat-strip > div {
+    display: block !important;
+    margin-right: 0 !important;
+    margin-bottom: 6px;
+  }
+
+  /* ── Profile cards: narrower on small screens ────────────── */
+  .profile-card {
+    min-width: 200px;
+    max-width: 230px;
+  }
+
+  /* ── Benchmark section ───────────────────────────────────── */
+  #card-5 {
+    padding: 14px !important;
+  }
+
+  /* ── Profiles section ────────────────────────────────────── */
+  #profiles-section {
+    padding: 16px !important;
+  }
+
+  /* ── Dropdown text stays readable ────────────────────────── */
+  .Select-control,
+  .Select-menu-outer {
+    font-size: 14px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SMALL MOBILE  (≤ 420px): extra compression for iPhone SE etc.
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 420px) {
+
+  #header-title {
+    font-size: 17px !important;
+  }
+
+  .chart-card .js-plotly-plot {
+    height: 280px !important;
+  }
+
+  #card-1 .js-plotly-plot {
+    height: 300px !important;
+  }
+
+  #card-5 .js-plotly-plot {
+    height: 340px !important;
+  }
+
+  /* Insight card font size */
+  .insight-card p {
+    font-size: 11px !important;
+  }
+
+  .profile-card {
+    min-width: 185px;
+    max-width: 210px;
+  }
+}
