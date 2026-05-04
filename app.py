@@ -194,8 +194,7 @@ def build_insight_cards(t):
                 'lineHeight': '1.5', 'margin': '0'
             }),
         ],
-        # className hooks responsive.css — DO NOT remove
-        className='insight-card',
+        className='insight-card', # Hook for responsive.css
         style={
             'flex': '1', 'minWidth': '200px', 'padding': '15px',
             'borderLeft': f"3px solid {t['accent']}",
@@ -389,10 +388,8 @@ def update_dashboard(selected_city, theme_mode):
         'fontFamily': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }
 
-    # IMPORTANT: chart_card_style sets ONLY visual properties (color, border).
-    # Width and flex behaviour come from .chart-card in responsive.css.
-    # If you add 'width' or 'flex' here, it will override the CSS and
-    # break mobile layout. Keep these two concerns separate.
+    # IMPORTANT: Width and flex behavior come from .chart-card in responsive.css.
+    # Removed 'width' and 'flex' here to prevent overriding CSS media queries.
     chart_card_style = {
         'backgroundColor': t['card_bg'],
         'border':          f"1px solid {t['border']}",
@@ -489,7 +486,7 @@ def update_dashboard(selected_city, theme_mode):
             font_size=12,
             margin=dict(t=50, b=40, l=20, r=20),
             legend=dict(font=dict(size=11)),
-            autosize=True,   # fills container — works with responsive:True in config
+            autosize=True,
         )
         return fig
 
@@ -574,14 +571,14 @@ def update_dashboard(selected_city, theme_mode):
         xaxis_title='',
         margin=dict(t=20, b=60, l=30, r=20),
         legend=dict(
-            orientation='h',          # horizontal legend fits narrow mobile screens
+            orientation='h',
             yanchor='bottom', y=1.02,
             xanchor='right',  x=1,
         ),
     )
     apply_theme(fig5)
 
-    # ── Return (order must match Output list exactly) ────────────────────────
+    # ── Return ─────────────────────────────────────────────────────────────
     return (
         main_style,
         {'textAlign': 'center', 'color': t['accent'], 'fontWeight': '800', 'margin': '0'},
